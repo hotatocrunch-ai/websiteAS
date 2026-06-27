@@ -1,0 +1,200 @@
+'use client';
+
+import { useEffect, useState } from 'react';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import { AnimatePresence, motion } from 'framer-motion';
+import { Menu, X, Scissors, MessageCircle } from 'lucide-react';
+import { navLinks, siteConfig } from '@/constants/site';
+import { buildWhatsAppLink } from '@/utils/format';
+import { cn } from '@/lib/utils';
+import {
+  Sheet,
+  SheetContent,
+  SheetTrigger,
+  SheetClose,
+} from '@/components/ui/sheet';
+import { Button } from '@/components/ui/button';
+
+export function Navbar() {
+  const [scrolled, setScrolled] = useState(false);
+  const [open, setOpen] = useState(false);
+  const pathname = usePathname();
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 20);
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
+  useEffect(() => {
+    setOpen(false);
+  }, [pathname]);
+
+  return (
+    <header
+      className={cn(
+        'fixed inset-x-0 top-0 z-50 transition-all duration-500',
+        scrolled
+          ? 'glass-nav border-b border-slate-200/60 bg-white/80 shadow-soft'
+          : 'border-b border-transparent bg-transparent',
+      )}
+    >
+      <nav className="container-page flex h-16 items-center justify-between lg:h-20">
+        {/* Logo */}
+        <Link
+          href="/"
+          className="group flex items-center gap-2.5"
+          aria-label={siteConfig.name}
+        >
+          <span
+            className={cn(
+              'flex h-9 w-9 items-center justify-center rounded-xl bg-gold-gradient shadow-gold-glow transition-transform duration-300 group-hover:scale-110',
+            )}
+          >
+            <Scissors className="h-5 w-5 text-navy" strokeWidth={2.5} />
+          </span>
+          <span
+            className={cn(
+              'text-lg font-extrabold tracking-tight transition-colors',
+              scrolled ? 'text-navy' : 'text-navy',
+            )}
+          >
+            Agus
+            <span className="text-gold-600"> Collection</span>
+          </span>
+        </Link>
+
+        {/* Desktop Menu */}
+        <div className="hidden items-center gap-1 lg:flex">
+          {navLinks.map((link) => {
+            const isActive =
+              link.href === '/'
+                ? pathname === '/'
+                : pathname.startsWith(link.href.replace('/#', '/'));
+            return (
+              <Link
+                key={link.href}
+                href={link.href}
+                className={cn(
+                  'group relative px-4 py-2 text-sm font-medium transition-colors',
+                  scrolled
+                    ? 'text-slate-700 hover:text-navy'
+                    : 'text-slate-700 hover:text-navy',
+                )}
+              >
+                {link.label}
+                <span
+                  className={cn(
+                    'absolute inset-x-4 -bottom-0.5 h-0.5 origin-left rounded-full bg-gold-gradient transition-transform duration-300',
+                    isActive
+                      ? 'scale-x-100'
+                      : 'scale-x-0 group-hover:scale-x-100',
+                  )}
+                />
+              </Link>
+            );
+          })}
+        </div>
+
+        {/* Desktop CTA */}
+        <div className="hidden lg:block">
+          <Button
+            asChild
+            size="sm"
+            className="rounded-full bg-gold-gradient text-navy shadow-gold-glow hover:shadow-gold-glow-lg"
+          >
+            <a
+              href={buildWhatsAppLink(
+                `Halo ${siteConfig.name}, saya ingin konsultasi pemesanan.`,
+              )}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <MessageCircle className="mr-1.5 h-4 w-4" />
+              Pesan Sekarang
+            </a>
+          </Button>
+        </div>
+
+        {/* Mobile Menu */}
+        <div className="lg:hidden">
+          <Sheet open={open} onOpenChange={setOpen}>
+            <SheetTrigger asChild>
+              <button
+                className="flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white/80 text-navy backdrop-blur transition-colors hover:bg-slate-50"
+                aria-label="Buka menu"
+              >
+                <Menu className="h-5 w-5" />
+              </button>
+            </SheetTrigger>
+            <SheetContent
+              side="right"
+              className="w-full max-w-sm border-l-0 bg-navy p-0 text-white"
+            >
+              <div className="flex h-full flex-col">
+                <div className="flex items-center justify-between border-b border-white/10 px-6 py-5">
+                  <span className="flex items-center gap-2 text-lg font-extrabold">
+                    <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-gold-gradient">
+                      <Scissors className="h-4 w-4 text-navy" strokeWidth={2.5} />
+                    </span>
+                    Agus <span className="text-gold-400">Collection</span>
+                  </span>
+                  <SheetClose asChild>
+                    <button
+                      className="flex h-9 w-9 items-center justify-center rounded-lg border border-white/10 text-white/80 transition-colors hover:bg-white/10"
+                      aria-label="Tutup menu"
+                    >
+                      <X className="h-5 w-5" />
+                    </button>
+                  </SheetClose>
+                </div>
+
+                <div className="flex flex-1 flex-col gap-1 px-4 py-6">
+                  {navLinks.map((link, i) => (
+                    <motion.div
+                      key={link.href}
+                      initial={{ opacity: 0, x: 20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: 0.05 * i + 0.1 }}
+                    >
+                      <Link
+                        href={link.href}
+                        className="flex items-center justify-between rounded-xl px-4 py-3.5 text-base font-medium text-slate-200 transition-colors hover:bg-white/5 hover:text-white"
+                      >
+                        {link.label}
+                        <span className="text-gold-400">→</span>
+                      </Link>
+                    </motion.div>
+                  ))}
+                </div>
+
+                <div className="border-t border-white/10 p-6">
+                  <Button
+                    asChild
+                    className="w-full rounded-full bg-gold-gradient text-navy shadow-gold-glow"
+                  >
+                    <a
+                      href={buildWhatsAppLink(
+                        `Halo ${siteConfig.name}, saya ingin konsultasi pemesanan.`,
+                      )}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      <MessageCircle className="mr-2 h-4 w-4" />
+                      Pesan Sekarang
+                    </a>
+                  </Button>
+                  <p className="mt-4 text-center text-xs text-slate-400">
+                    {siteConfig.hours}
+                  </p>
+                </div>
+              </div>
+            </SheetContent>
+          </Sheet>
+        </div>
+      </nav>
+    </header>
+  );
+}
